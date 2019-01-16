@@ -1,0 +1,100 @@
+Index: fstools-2015-02-25.1/block.c
+===================================================================
+--- fstools-2015-02-25.1.orig/block.c
++++ fstools-2015-02-25.1/block.c
+@@ -883,7 +883,7 @@ static int main_hotplug(int argc, char *
+ 		mount_point = find_mount_point(path);
+ 		if (mount_point)
+ 			err = umount2(mount_point, MNT_DETACH);
+-
++		
+ 		if (err)
+ 			ERROR("umount of %s failed (%d) - %s\n",
+ 					mount_point, err, strerror(errno));
+@@ -1473,9 +1473,49 @@ static int main_swapoff(int argc, char *
+ 	return 0;
+ }
+ 
++#define SMB_FLAG_FILE "/tmp/smb.flag"
++static void check_smb_point()
++{
++        FILE *fp = fopen("/proc/mounts", "r");
++        static char line[256];
++	int smbon = 0;
++
++        if(!fp)
++                return;
++
++        while (fgets(line, sizeof(line), fp)) {
++		char *ext4 = strstr(line, "ext4");
++		char *vfat = strstr(line, "vfat");
++		char *ntfs = strstr(line, "ntfs");
++		if (ext4 || vfat || ntfs )
++		{
++			smbon = 1;
++			break;
++		}
++        }
++
++        fclose(fp);
++
++	if (smbon)
++	{
++		FILE *smb = fopen(SMB_FLAG_FILE, "w");
++		if (smb)
++		{
++			fclose(smb);
++		}
++		system("smp.sh storage");
++	}
++	else
++	{
++		unlink(SMB_FLAG_FILE);	
++		system("smp.sh wifi");
++	}
++}
++
+ int main(int argc, char **argv)
+ {
+ 	char *base = basename(*argv);
++	int ret = -1;
+ 
+ 	umask(0);
+ 
+@@ -1487,25 +1527,28 @@ int main(int argc, char **argv)
+ 
+ 	if ((argc > 1) && !strcmp(base, "block")) {
+ 		if (!strcmp(argv[1], "info"))
+-			return main_info(argc, argv);
++			ret = main_info(argc, argv);
+ 
+ 		if (!strcmp(argv[1], "detect"))
+-			return main_detect(argc, argv);
++			ret = main_detect(argc, argv);
+ 
+ 		if (!strcmp(argv[1], "hotplug"))
+-			return main_hotplug(argc, argv);
++			ret = main_hotplug(argc, argv);
+ 
+ 		if (!strcmp(argv[1], "extroot"))
+-			return main_extroot(argc, argv);
++			ret = main_extroot(argc, argv);
+ 
+ 		if (!strcmp(argv[1], "mount"))
+-			return main_mount(argc, argv);
++			ret = main_mount(argc, argv);
+ 
+ 		if (!strcmp(argv[1], "umount"))
+-			return main_umount(argc, argv);
++			ret = main_umount(argc, argv);
+ 	}
+ 
+-	fprintf(stderr, "Usage: block <info|mount|umount|detect>\n");
++	check_smb_point();
++	return ret;
+ 
+-	return -1;
++//	fprintf(stderr, "Usage: block <info|mount|umount|detect>\n");
++
++//	return -1;
+ }

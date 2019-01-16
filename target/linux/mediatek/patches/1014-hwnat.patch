@@ -1,0 +1,13 @@
+Index: linux-3.10.20/net/nat/hw_nat/ra_nat.c
+===================================================================
+--- linux-3.10.20.orig/net/nat/hw_nat/ra_nat.c
++++ linux-3.10.20/net/nat/hw_nat/ra_nat.c
+@@ -3954,7 +3954,7 @@ static void SetAclFwd(uint32_t Ebl)
+ 		WanInt = ra_dev_get_by_name("eth2.2");
+ #endif
+ #endif
+-		LanInt = ra_dev_get_by_name("br0");
++		LanInt = ra_dev_get_by_name("br-lan");
+ 		for(i = 0;i< 6;i++){
+ 			value = RegRead(RALINK_ETH_SW_BASE + 0x2004 + (i * 0x100));
+ 			value |= (0x1 << 10);

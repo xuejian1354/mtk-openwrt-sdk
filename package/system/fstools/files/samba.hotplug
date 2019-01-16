@@ -1,0 +1,34 @@
+
+[ "$ACTION" = "add" ] && {
+	[ "$DEVTYPE" = "partition" ] && {
+		[ "${DEVNAME:0:2}" = "sd" ] && {
+			logger hua $DEVNAME
+			section=`/sbin/uci add samba sambashare`
+			/sbin/uci rename samba.$section=usb$DEVNAME
+			/sbin/uci set samba.usb$DEVNAME.name=usb$DEVNAME
+			/sbin/uci set samba.usb$DEVNAME.path=/mnt/$DEVNAME
+			/sbin/uci set samba.usb$DEVNAME.read_only=no
+			/sbin/uci set samba.usb$DEVNAME.guest_ok=yes
+			/sbin/uci set samba.usb$DEVNAME.create_mask=777
+			/sbin/uci set samba.usb$DEVNAME.dir_mask=777
+			logger `/sbin/uci show samba`
+			/etc/init.d/samba restart
+		}
+	}
+}
+
+[ "$ACTION" = "remove" ] && {
+	[ "$DEVTYPE" = "partition" ] && {
+		[ "${DEVNAME:0:2}" = "sd" ] && {
+			logger hua $DEVNAME
+			[ `/sbin/uci get samba.usb$DEVNAME.name` = "" ] && break
+			[ `/sbin/uci get samba.usb$DEVNAME.name` = "usb$DEVNAME" ] && {
+				/sbin/uci delete samba.usb$DEVNAME
+			}
+			logger `/sbin/uci show samba`
+			/etc/init.d/samba restart
+		}
+	}
+}
+
+

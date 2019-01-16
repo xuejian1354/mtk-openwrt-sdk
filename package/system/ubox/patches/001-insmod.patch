@@ -1,0 +1,26 @@
+Index: ubox-2015-02-25.1/kmodloader.c
+===================================================================
+--- ubox-2015-02-25.1.orig/kmodloader.c
++++ ubox-2015-02-25.1/kmodloader.c
+@@ -574,15 +574,18 @@ static int main_insmod(int argc, char **
+ 	if (argc < 2)
+ 		return print_insmod_usage();
+ 
++	if (init_module_folders())
++		return -1;
++
++	if (scan_loaded_modules())
++		return -1;
++
+ 	name = get_module_name(argv[1]);
+ 	if (!name) {
+ 		ERROR("cannot find module - %s\n", argv[1]);
+ 		return -1;
+ 	}
+ 
+-	if (scan_loaded_modules())
+-		return -1;
+-
+ 	if (find_module(name)) {
+ 		ERROR("module is already loaded - %s\n", name);
+ 		return -1;
